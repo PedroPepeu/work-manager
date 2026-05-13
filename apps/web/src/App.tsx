@@ -1,10 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Activity } from "lucide-react";
-import { SessionHistory } from "./components/SessionHistory";
-import { SettingsPanel } from "./components/SettingsPanel";
-import { TaskCalendar } from "./components/TaskCalendar";
-import { TaskPanel } from "./components/TaskPanel";
-import { TimerPanel } from "./components/TimerPanel";
+import { DayAgenda } from "./components/DayAgenda";
+import { PomodoroSidebar } from "./components/PomodoroSidebar";
+import { TaskSidebar } from "./components/TaskSidebar";
 import { api } from "./lib/api";
 
 export function App() {
@@ -22,8 +20,8 @@ export function App() {
   const hasError = tasks.isError || settings.isError || sessions.isError || health.isError;
 
   return (
-    <main className="min-h-screen bg-paper px-4 py-5 text-ink sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-5">
+    <main className="flex h-screen flex-col overflow-hidden bg-paper px-4 py-5 text-ink sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 min-h-0">
         <header className="flex flex-col gap-3 border-b border-line pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-normal text-ink">Work Manager</h1>
@@ -53,16 +51,10 @@ export function App() {
         {isLoading || !tasks.data || !settings.data || !sessions.data ? (
           <div className="panel min-h-80 animate-pulse text-sm text-ink/55">Loading workspace</div>
         ) : (
-          <div className="grid min-h-[calc(100vh-170px)] gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-            <TaskPanel tasks={tasks.data} />
-            <div className="grid min-h-0 gap-5">
-              <TimerPanel settings={settings.data} tasks={tasks.data} />
-              <div className="grid gap-5 xl:grid-cols-2">
-                <TaskCalendar tasks={tasks.data} />
-                <SettingsPanel settings={settings.data} />
-                <SessionHistory sessions={sessions.data} />
-              </div>
-            </div>
+          <div className="workspace-layout flex-1 min-h-0">
+            <TaskSidebar tasks={tasks.data} />
+            <DayAgenda sessions={sessions.data} tasks={tasks.data} />
+            <PomodoroSidebar settings={settings.data} tasks={tasks.data} sessions={sessions.data} />
           </div>
         )}
       </div>
