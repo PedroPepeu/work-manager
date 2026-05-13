@@ -1,6 +1,6 @@
 import type { PomodoroMode, Settings, Task } from "@work-manager/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pause, Play, RotateCcw, SkipForward } from "lucide-react";
+import { ChevronRight, Pause, Play, RotateCcw, SkipForward } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { api, formatSeconds } from "../lib/api";
 import { playIntervalSound } from "../lib/sound";
@@ -9,6 +9,8 @@ import { useTimerStore } from "../store/timer";
 type TimerPanelProps = {
   settings: Settings;
   tasks: Task[];
+  compact?: boolean;
+  onCollapse?: () => void;
 };
 
 const modeLabel: Record<PomodoroMode, string> = {
@@ -17,7 +19,7 @@ const modeLabel: Record<PomodoroMode, string> = {
   long_break: "Long break"
 };
 
-export function TimerPanel({ settings, tasks }: TimerPanelProps) {
+export function TimerPanel({ settings, tasks, compact = false, onCollapse }: TimerPanelProps) {
   const queryClient = useQueryClient();
   const intervalRef = useRef<number | null>(null);
   const timer = useTimerStore();
@@ -89,9 +91,23 @@ export function TimerPanel({ settings, tasks }: TimerPanelProps) {
   }
 
   return (
-    <section className="panel flex flex-col items-center justify-center text-center">
-      <div className="mb-4 rounded-full border border-line bg-white px-4 py-1 text-sm font-semibold text-herb">
-        {modeLabel[timer.mode]}
+    <section
+      className={`panel flex flex-col items-center justify-center text-center ${
+        compact ? "timer-panel-compact" : ""
+      }`}
+    >
+      <div className="mb-4 flex w-full items-center justify-between">
+        <div className="w-10" />
+        <div className="rounded-full border border-line bg-white px-4 py-1 text-sm font-semibold text-herb">
+          {modeLabel[timer.mode]}
+        </div>
+        {onCollapse ? (
+          <button className="icon-button w-10" onClick={onCollapse} aria-label="Collapse Pomodoro sidebar">
+            <ChevronRight size={18} />
+          </button>
+        ) : (
+          <div className="w-10" />
+        )}
       </div>
       <div className="timer-face">
         <span>{formatSeconds(timer.remainingSeconds)}</span>

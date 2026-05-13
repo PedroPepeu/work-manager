@@ -5,9 +5,10 @@ import { api } from "../lib/api";
 
 type SettingsPanelProps = {
   settings: Settings;
+  embedded?: boolean;
 };
 
-export function SettingsPanel({ settings }: SettingsPanelProps) {
+export function SettingsPanel({ settings, embedded = false }: SettingsPanelProps) {
   const queryClient = useQueryClient();
   const updateSettings = useMutation({
     mutationFn: api.updateSettings,
@@ -19,7 +20,7 @@ export function SettingsPanel({ settings }: SettingsPanelProps) {
   }
 
   return (
-    <section className="panel">
+    <section className={embedded ? "panel settings-panel-embedded" : "panel"}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-ink">Settings</h2>
         <button
