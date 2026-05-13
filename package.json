@@ -1,0 +1,20 @@
+{
+  "name": "work-manager",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:api": "pnpm --filter @work-manager/api dev",
+    "dev:web": "pnpm --filter @work-manager/web dev",
+    "build": "pnpm -r build",
+    "check": "pnpm -r check",
+    "db:generate": "pnpm --filter @work-manager/api db:generate",
+    "db:migrate": "pnpm --filter @work-manager/api db:migrate"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2"
+  }
+}
