@@ -17,11 +17,13 @@ export function TaskPanel({ tasks }: TaskPanelProps) {
   const selectTask = useTimerStore((state) => state.selectTask);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
+  const [dueDate, setDueDate] = useState("");
 
   const createTask = useMutation({
     mutationFn: api.createTask,
     onSuccess: () => {
       setTitle("");
+      setDueDate("");
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   });
@@ -39,7 +41,7 @@ export function TaskPanel({ tasks }: TaskPanelProps) {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
-    createTask.mutate({ title, priority, notes: "", dueDate: null });
+    createTask.mutate({ title, priority, notes: "", dueDate: dueDate || null });
   }
 
   return (
@@ -51,9 +53,9 @@ export function TaskPanel({ tasks }: TaskPanelProps) {
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="mb-5 flex gap-2">
+      <form onSubmit={onSubmit} className="mb-5 grid gap-2 sm:grid-cols-[1fr_8rem_10rem_2.5rem]">
         <input
-          className="input flex-1"
+          className="input"
           placeholder="Add a task"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -69,6 +71,12 @@ export function TaskPanel({ tasks }: TaskPanelProps) {
             </option>
           ))}
         </select>
+        <input
+          className="input"
+          type="date"
+          value={dueDate}
+          onChange={(event) => setDueDate(event.target.value)}
+        />
         <button className="icon-button bg-herb text-white" type="submit" disabled={!title.trim()}>
           <Plus size={18} />
         </button>

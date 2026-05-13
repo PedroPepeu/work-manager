@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity } from "lucide-react";
 import { SessionHistory } from "./components/SessionHistory";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { TaskCalendar } from "./components/TaskCalendar";
 import { TaskPanel } from "./components/TaskPanel";
 import { TimerPanel } from "./components/TimerPanel";
 import { api } from "./lib/api";
@@ -57,6 +58,7 @@ export function App() {
             <div className="grid min-h-0 gap-5">
               <TimerPanel settings={settings.data} tasks={tasks.data} />
               <div className="grid gap-5 xl:grid-cols-2">
+                <TaskCalendar tasks={tasks.data} />
                 <SettingsPanel settings={settings.data} />
                 <SessionHistory sessions={sessions.data} />
               </div>
