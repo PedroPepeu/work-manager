@@ -27,7 +27,8 @@ pnpm dev
 ```
 
 Docker exposes PostgreSQL on host port `5433` to avoid conflicts with a local
-PostgreSQL server on `5432`.
+PostgreSQL server on `5432`. The migration command retries briefly while the
+container finishes PostgreSQL startup.
 
 Frontend: http://localhost:5173
 

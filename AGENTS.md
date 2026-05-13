@@ -19,7 +19,7 @@ Run commands from the repository root:
 ```bash
 pnpm install        # Install workspace dependencies
 docker compose up -d # Start PostgreSQL on localhost:5433
-pnpm db:migrate    # Apply Drizzle migrations
+pnpm db:migrate    # Apply Drizzle migrations, retrying while Postgres starts
 pnpm dev           # Start API and frontend in parallel
 pnpm dev:api       # Start only the Fastify API
 pnpm dev:web       # Start only the Vite frontend

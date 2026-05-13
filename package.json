@@ -10,7 +10,7 @@
     "build": "pnpm -r build",
     "check": "pnpm -r check",
     "db:generate": "pnpm --filter @work-manager/api db:generate",
-    "db:migrate": "pnpm --filter @work-manager/api db:migrate"
+    "db:migrate": "node scripts/migrate-with-retry.mjs"
   },
   "packageManager": "pnpm@9.15.4",
   "devDependencies": {
