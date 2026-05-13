@@ -1,29 +1,29 @@
-import type { Task, TaskPriority } from "@work-manager/shared";
+import type { Task } from "@work-manager/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Check, Plus, Trash2 } from "lucide-react";
+import { Calendar, Check, ChevronLeft, Play, Plus, Square, Trash2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { api } from "../lib/api";
 import { useTimerStore } from "../store/timer";
+import { useTrackingStore } from "../store/tracking";
 
 type TaskPanelProps = {
   tasks: Task[];
+  onCollapse?: () => void;
 };
 
-const priorities: TaskPriority[] = ["low", "medium", "high"];
-
-export function TaskPanel({ tasks }: TaskPanelProps) {
+export function TaskPanel({ tasks, onCollapse }: TaskPanelProps) {
   const queryClient = useQueryClient();
   const selectedTaskId = useTimerStore((state) => state.selectedTaskId);
   const selectTask = useTimerStore((state) => state.selectTask);
+  const activeTaskId = useTrackingStore((state) => state.activeTaskId);
+  const startTask = useTrackingStore((state) => state.startTask);
+  const stopTask = useTrackingStore((state) => state.stopTask);
   const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState<TaskPriority>("medium");
-  const [dueDate, setDueDate] = useState("");
 
   const createTask = useMutation({
     mutationFn: api.createTask,
     onSuccess: () => {
       setTitle("");
-      setDueDate("");
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   });
@@ -39,50 +39,56 @@ export function TaskPanel({ tasks }: TaskPanelProps) {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["tasks"] })
   });
 
+  const createSession = useMutation({
+    mutationFn: api.createSession,
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["sessions"] })
+  });
+
+  function handlePlayStop(event: React.MouseEvent, task: Task) {
+    event.stopPropagation();
+    if (activeTaskId === task.id) {
+      const result = stopTask();
+      if (!result) return;
+      const endedAt = new Date().toISOString();
+      const actualSeconds = Math.round(
+        (new Date(endedAt).getTime() - new Date(result.startedAt).getTime()) / 1000
+      );
+      createSession.mutate({
+        taskId: result.taskId,
+        mode: "focus",
+        plannedSeconds: actualSeconds,
+        actualSeconds,
+        status: "completed",
+        startedAt: result.startedAt,
+        endedAt
+      });
+    } else {
+      startTask(task.id);
+    }
+  }
+
   function onSubmit(event: FormEvent) {
     event.preventDefault();
-    createTask.mutate({ title, priority, notes: "", dueDate: dueDate || null });
+    createTask.mutate({ title, priority: "medium", notes: "", dueDate: null });
   }
 
   return (
-    <section className="panel flex min-h-0 flex-col">
-      <div className="mb-5 flex items-center justify-between">
+    <section className="panel flex h-full min-h-0 flex-col">
+      <div className="mb-5 flex items-center gap-3">
+        {onCollapse ? (
+          <button className="icon-button shrink-0" onClick={onCollapse} aria-label="Collapse task sidebar">
+            <ChevronLeft size={18} />
+          </button>
+        ) : (
+          <div className="w-10 shrink-0" />
+        )}
         <div>
           <h2 className="text-lg font-semibold text-ink">Tasks</h2>
           <p className="text-sm text-ink/60">{tasks.length} total</p>
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="mb-5 grid gap-2 sm:grid-cols-[1fr_8rem_10rem_2.5rem]">
-        <input
-          className="input"
-          placeholder="Add a task"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
-        <select
-          className="input w-28"
-          value={priority}
-          onChange={(event) => setPriority(event.target.value as TaskPriority)}
-        >
-          {priorities.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <input
-          className="input"
-          type="date"
-          value={dueDate}
-          onChange={(event) => setDueDate(event.target.value)}
-        />
-        <button className="icon-button bg-herb text-white" type="submit" disabled={!title.trim()}>
-          <Plus size={18} />
-        </button>
-      </form>
-
-      <div className="min-h-0 space-y-2 overflow-auto pr-1">
+      <div className="min-h-0 flex-1 space-y-2 overflow-auto pr-1">
         {tasks.map((task) => (
           <article
             key={task.id}
@@ -112,7 +118,6 @@ export function TaskPanel({ tasks }: TaskPanelProps) {
                 >
                   {task.title}
                 </h3>
-                <span className={`priority priority-${task.priority}`}>{task.priority}</span>
               </div>
               {task.dueDate ? (
                 <p className="mt-1 flex items-center gap-1 text-xs text-ink/55">
@@ -121,6 +126,17 @@ export function TaskPanel({ tasks }: TaskPanelProps) {
                 </p>
               ) : null}
             </div>
+            <button
+              className={`icon-button h-8 w-8 ${
+                activeTaskId === task.id
+                  ? "bg-tomato/10 text-tomato"
+                  : "bg-white text-ink/40 hover:text-herb"
+              }`}
+              onClick={(e) => handlePlayStop(e, task)}
+              aria-label={activeTaskId === task.id ? "Stop tracking" : "Start tracking"}
+            >
+              {activeTaskId === task.id ? <Square size={14} /> : <Play size={14} />}
+            </button>
             <button
               className="icon-button h-8 w-8 bg-white text-ink/60 hover:text-tomato"
               onClick={(event) => {
@@ -133,6 +149,20 @@ export function TaskPanel({ tasks }: TaskPanelProps) {
           </article>
         ))}
       </div>
+
+      <form onSubmit={onSubmit} className="mt-5 grid gap-2">
+        <div className="flex gap-2">
+          <input
+            className="input flex-1"
+            placeholder="Add a task"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          <button className="icon-button bg-herb text-white" type="submit" disabled={!title.trim()}>
+            <Plus size={18} />
+          </button>
+        </div>
+      </form>
     </section>
   );
 }
